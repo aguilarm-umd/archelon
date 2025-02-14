@@ -1,0 +1,10 @@
+<%= render(@layout.new(field: @field)) do |component| %>
+  <% component.with_label do %>
+    <%= label %>
+  <% end %>
+  <% component.with_value do %>
+    <a href=<%= @field.values[0] %>>
+        <%= @field.values[0] %>
+    </a>
+  <% end %>
+<% end %>
