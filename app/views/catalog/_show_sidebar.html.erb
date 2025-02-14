@@ -1,30 +1,42 @@
-<% presenter = document_presenter(document) %>
-<%= render presenter.view_config.sidebar_component.new(presenter: presenter) %>
+<%
+  presenter = document_presenter(document)
+  render presenter.view_config.sidebar_component.new(presenter: presenter)
 
-<%# UMD Customization %>
-<% if @document[:rdf_type].include? 'fedora:Binary' %>
-  <div class="panel panel-default">
-    <div class="panel-heading">Download or Generate Link</div>
-    <div class="panel-body">
-      <ul class="nav">
-        <li><%= link_to 'Download', @document.id, target: '_blank' %></li>
-        <li><%= generate_download_url_link(@document) %></li>
-      </ul>
+  # UMD Customization
+  model = @document[:content_model_name__str]
+
+  # Pages is going to be an array of tuples
+  pages = model == 'Item' ? @document[:page_label_sequence__txts].zip(@document[:page_uri_sequence__uris]) : []
+
+  if model == 'Item'
+    files = @document['item__has_member'].map { |page| page['page__has_file'].map { |file| file } }[0]
+  elsif model == 'Page'
+    files = @document['page__has_file'].map { |file| file }
+  else
+    files = []
+  end
+  %>
+
+<% if model == 'Item' && @document[:rdf_type__facet].include?('fedora:Binary') %>
+    <div class="panel panel-default">
+      <div class="panel-heading">Download or Generate Link</div>
+      <div class="panel-body">
+        <ul class="nav">
+          <li><%= link_to 'Download', @document.id, target: '_blank' %></li>
+          <li><%= generate_download_url_link(@document) %></li>
+        </ul>
+      </div>
     </div>
-  </div>
-<% end %>
+    <% end %>
 
-<% pcdm_member_field_value = presenter.field_value(presenter.configuration.show_fields['pcdm_members']) %>
-<% pages = pcdm_member_field_value
-  .select{|member| member['component'] == 'Page'}
-  .sort{|a,b| a['page_number'] <=> b['page_number'] } %>
+
 <% unless pages.empty? %>
   <div class="panel panel-default">
     <div class="panel-heading">Select Page for More Options</div>
     <div class="panel-body">
       <ul class="nav">
-        <% pages.first(8).each do |v| %>
-          <li><%= link_to v['display_title'], solr_document_path(v['id']) %></li>
+        <% pages.first(8).each do |page| %>
+          <li><%= link_to page[0], solr_document_path(page[1]) %></li>
         <% end %>
         <% if pages.length > 8 %>
           <li><a href="#pages" data-toggle="modal">more »</a></li>
@@ -43,7 +55,7 @@
           <div class="modal-body">
             <ul class="nav">
               <% pages.each do |v| %>
-                <li><%= link_to "Page #{v['page_number']}", solr_document_path(v['id']) %></li>
+                <li><%= link_to page[0], solr_document_path(page[1]) %></li>
               <% end %>
             </ul>
           </div>
@@ -53,14 +65,13 @@
   <% end %>
 <% end %>
 
-<% files = presenter.field_value(presenter.configuration.show_fields['pcdm_files']) %>
 <% unless files.empty? %>
   <div class="panel panel-default">
     <div class="panel-heading">Select File for Download Options</div>
     <div class="panel-body">
       <ul class="nav">
-        <% files.each do |v| %>
-          <li><%= link_to(v['display_title'].present? ? v['display_title'] : v['id'], solr_document_path(v['id'])) %></li>
+        <% files.each do |file| %>
+          <li><%= link_to(file['file__filename__txt'].present? ? file['file__filename__txt'] : file['id'], solr_document_path(file['id'])) %></li>
         <% end %>
       </ul>
     </div>
