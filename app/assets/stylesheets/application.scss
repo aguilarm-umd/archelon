@@ -8,6 +8,26 @@
   text-decoration: none;
 }
 
+.umd-table {
+  overflow: auto;
+  border-collapse: collapse;
+  width: 100%;
+  height: 500px;
+}
+
+.umd-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.umd-table th td {
+  padding: 8px 16px;
+}
+
+.umd-table th {
+  background:#eee;
+}
 
 @import "mirador_viewer";
 @import "bootstrap_overrides";
